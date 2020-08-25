@@ -6,7 +6,8 @@ output:
 ---
 
 Using ggplot2 for graphs.
-```{r}
+
+```r
 library(ggplot2)
 ```
 
@@ -14,7 +15,8 @@ library(ggplot2)
 
 The code below unzips the zipped data into the current working directory if the
 data is not already loaded in. The downloaded file is then read into the df activity.
-```{r}
+
+```r
 zipped_data <- "./activity.zip"
 unzipped <- "./activity.csv"
 
@@ -28,7 +30,8 @@ activity <- read.csv("./activity.csv", sep = ",", header = TRUE)
 ## What is mean total number of steps taken per day?
 
 The following plot is a histogram of the total number of steps taken per day.
-```{r}
+
+```r
 steps_df <- activity[!(is.na(activity$steps) | activity$steps == 0),]
 unique_dates <- unique(steps_df$date)
 sum_steps <- rep(NA, length(unique_dates))
@@ -44,26 +47,42 @@ hist <- hist + geom_histogram(color = "red", bins = 10) + labs(title ="Steps per
 print(hist)
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-3-1.png)<!-- -->
+
 The mean of the total number of steps taken per day is:
-```{r}
+
+```r
 mean(steps_per_day$Steps)
 ```
+
+```
+## [1] 10766.19
+```
 The median of the total number of steps taken per day is:
-```{r}
+
+```r
 median(steps_per_day$Steps)
 ```
 
+```
+## [1] 10765
+```
+
 The plot is a time series of the total number of steps per day.
-```{r}
+
+```r
 ts_steps <- ggplot(data = steps_per_day, aes(x = as.Date(Date), y = Steps))
 ts_steps <- ts_steps + geom_line() + labs(title = "Steps per day") + xlab("Steps") + ylab("Count")
 print(ts_steps)
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+
 ## What is the average daily activity pattern?
 
 The following is a time series plot of steps per 5 minute interval.
-```{r}
+
+```r
 unique_interval <- unique(activity$interval)
 average_steps_interval <- rep(NA, length(unique_interval))
 count_intervals <- 1
@@ -78,9 +97,16 @@ ts_interval <- ts_interval + geom_line() + labs(title = "Steps per 5 min interva
 print(ts_interval)
 ```
 
+![](PA1_template_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+
 The interval with the mean maximum number of steps is:
-```{r}
+
+```r
 steps_per_interval[which.max(steps_per_interval$Steps), "Interval"]
+```
+
+```
+## [1] 835
 ```
 
 ## Imputing missing values
