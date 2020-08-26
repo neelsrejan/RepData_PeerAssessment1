@@ -52,7 +52,8 @@ print(hist)
 The mean of the total number of steps taken per day is:
 
 ```r
-mean(steps_per_day$Steps)
+mean_steps_per_day <- mean(steps_per_day$Steps)
+mean_steps_per_day
 ```
 
 ```
@@ -61,12 +62,24 @@ mean(steps_per_day$Steps)
 The median of the total number of steps taken per day is:
 
 ```r
-median(steps_per_day$Steps)
+median_steps_per_day <- median(steps_per_day$Steps)
+median_steps_per_day
 ```
 
 ```
 ## [1] 10765
 ```
+The total number of steps taken per day is:
+
+```r
+tot_steps_per_day <- sum(steps_per_day$Steps)
+tot_steps_per_day
+```
+
+```
+## [1] 570608
+```
+
 
 The plot is a time series of the total number of steps per day.
 
@@ -76,7 +89,7 @@ ts_steps <- ts_steps + geom_line() + labs(title = "Steps per day") + xlab("Steps
 print(ts_steps)
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-6-1.png)<!-- -->
+![](PA1_template_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
 
 ## What is the average daily activity pattern?
 
@@ -97,7 +110,7 @@ ts_interval <- ts_interval + geom_line() + labs(title = "Steps per 5 min interva
 print(ts_interval)
 ```
 
-![](PA1_template_files/figure-html/unnamed-chunk-7-1.png)<!-- -->
+![](PA1_template_files/figure-html/unnamed-chunk-8-1.png)<!-- -->
 
 The interval with the mean maximum number of steps is:
 
@@ -111,6 +124,103 @@ steps_per_interval[which.max(steps_per_interval$Steps), "Interval"]
 
 ## Imputing missing values
 
+The total number of missing values in the activity dataset is:
 
+```r
+sum(is.na(activity$steps))
+```
+
+```
+## [1] 2304
+```
+
+The strategy for filling in the missing values in the activity dataframe is to use the mean steps per 
+interval in order to approximate the probable amount of steps taken had the data been present. The now
+filled dataframe is plotted as a histogram of steps per day with replaced NA values.
+
+```r
+activity_replace_NA <- activity
+index_NA <- which(is.na(activity$steps))
+for (idx in index_NA) {
+    idx_interval <- activity[idx,"interval"]
+    activity_replace_NA[idx, "steps"] <- steps_per_interval[steps_per_interval$Interval == idx_interval,"Steps"]
+}
+
+unique_dates_replace_NA <- unique(activity_replace_NA$date)
+sum_steps_replace_NA <- rep(NA, length(unique_dates_replace_NA))
+count_dates_replace_NA <- 1
+for (day in unique_dates_replace_NA) {
+    sum_steps_replace_NA[count_dates_replace_NA] <- sum(activity_replace_NA[activity_replace_NA$date == day, "steps"])
+    count_dates_replace_NA <- count_dates_replace_NA + 1
+}
+steps_per_day_replace_NA <- data.frame("Steps" = sum_steps_replace_NA, "Date" = unique_dates_replace_NA)
+hist_replace_NA <- ggplot(steps_per_day_replace_NA, aes(Steps))
+hist_replace_NA <- hist_replace_NA + geom_histogram(color = "red", bins = 10) + labs(title ="Steps per day with replaced NA")
+print(hist_replace_NA)
+```
+
+![](PA1_template_files/figure-html/unnamed-chunk-11-1.png)<!-- -->
+
+The mean of the total number of steps taken per day with replaced NA's is:
+
+```r
+mean_steps_per_day_replace_NA <- mean(steps_per_day_replace_NA$Steps)
+mean_steps_per_day_replace_NA
+```
+
+```
+## [1] 10766.19
+```
+The median of the total number of steps taken per day with replaced NA's is:
+
+```r
+median_steps_per_day_replace_NA <- median(steps_per_day_replace_NA$Steps)
+median_steps_per_day_replace_NA
+```
+
+```
+## [1] 10766.19
+```
+The total number of steps taken per day with replaced NA's is:
+
+```r
+tot_steps_per_day_replace_NA <- sum(steps_per_day_replace_NA$Steps)
+tot_steps_per_day_replace_NA
+```
+
+```
+## [1] 656737.5
+```
+
+The difference in means of the total number of steps taken per day between replaced NA's vs. non-replaced NA's is:
+
+```r
+difference_mean_steps_per_day <- mean_steps_per_day_replace_NA - mean_steps_per_day
+difference_mean_steps_per_day
+```
+
+```
+## [1] 0
+```
+The difference in medians of the total number of steps taken per day between replaced NA's vs. non-replaced NA's is:
+
+```r
+difference_median_steps_per_day <- median_steps_per_day_replace_NA - median_steps_per_day
+difference_median_steps_per_day
+```
+
+```
+## [1] 1.188679
+```
+The difference in means of the total number of steps taken per day between replaced NA's vs. non-replaced NA's is:
+
+```r
+difference_tot_steps_per_day <- tot_steps_per_day_replace_NA - tot_steps_per_day
+difference_tot_steps_per_day
+```
+
+```
+## [1] 86129.51
+```
 
 ## Are there differences in activity patterns between weekdays and weekends?
