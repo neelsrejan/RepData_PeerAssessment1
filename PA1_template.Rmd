@@ -155,3 +155,41 @@ difference_tot_steps_per_day
 ```
 
 ## Are there differences in activity patterns between weekdays and weekends?
+
+Creating a dataframe with a factor variable day using the activity dataframe without missing values:
+```{r}
+activity_which_day <- activity_replace_NA
+activity_which_day$day <- weekdays(as.Date(activity_which_day$date))
+activity_which_day$type_day <- ifelse(activity_which_day$day %in% c("Saturday","Sunday"), "weekend", "weekday")
+activity_which_day$type_day <- as.factor(activity_which_day$type_day)
+```
+
+Creating a time series plot to show the difference in average steps per 5 minute interval based on weekdays vs weekends:
+```{r}
+unique_intervals_activity <- sort(unique(activity_which_day$interval))
+average_step_arr <- rep(NA, 2*length(unique_intervals_activity))
+interval_arr <- rep(NA, 2*length(unique_intervals_activity))
+day_arr <- rep(NA, 2*length(unique_intervals_activity))
+num_itr <- 1
+days <- c("weekday","weekend")
+for (day in days) {
+    for (interval in unique_intervals_activity) {
+        average_step_arr[num_itr] <- mean(activity_which_day[activity_which_day$type_day == day & activity_which_day$interval == interval, "steps"], na.rm = TRUE)
+        interval_arr[num_itr] <- interval
+        day_arr[num_itr] <- day
+        num_itr <- num_itr + 1
+    }
+}
+interval_by_day <- data.frame("interval" = interval_arr, "day" = day_arr, "steps" = average_step_arr)
+ts_day <-ggplot(data = interval_by_day, aes(x = interval, y = steps)) + 
+    geom_line() +
+    facet_grid(day ~ .) +
+    ggtitle("Steps per 5 minute interval from weekday and weekend") +
+    xlab("Interval") +
+    ylab("Average steps") +
+    theme(plot.title = element_text(hjust = 0.5))
+print(ts_day)
+```
+
+It appears that on weekdays there is a sharp rise in average steps before work time and then is very low for the rest of the workday and night, whereas during weekends there seem to be peaks that appear through the day and less steps all at once like weekdays. Weekends seem to spread the average steps out more.
+

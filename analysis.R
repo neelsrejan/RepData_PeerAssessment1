@@ -22,7 +22,7 @@ steps_per_day <- data.frame("Steps" = sum_steps, "Date" = unique_dates)
 #plot histogram of steps per day
 hist <- ggplot(steps_per_day, aes(Steps))
 hist <- hist + geom_histogram(color = "red", bins = 10) + labs(title ="Steps per day")
-png("./steps_per_day_histogram.png")
+png("./plots/steps_per_day_histogram.png")
 print(hist)
 dev.off()
 
@@ -34,7 +34,7 @@ tot_steps_per_day <- sum(steps_per_day$Steps)
 #plot a time series of steps per day
 ts_steps <- ggplot(data = steps_per_day, aes(x = as.Date(Date), y = Steps))
 ts_steps <- ts_steps + geom_line() + labs(title = "Steps per day") + xlab("Steps") + ylab("Count")
-png("./steps_per_day_time_series.png")
+png("./plots/steps_per_day_time_series.png")
 print(ts_steps)
 dev.off()
 
@@ -51,7 +51,7 @@ steps_per_interval <- data.frame("Steps" = average_steps_interval, "Interval" = 
 #plot a time series of steps per 5 min interval
 ts_interval <- ggplot(data = steps_per_interval, aes(x = Interval, y = Steps))
 ts_interval <- ts_interval + geom_line() + labs(title = "Steps per 5 min interval")
-png("./steps_per_interval_time_series.png")
+png("./plots/steps_per_interval_time_series.png")
 print(ts_interval)
 dev.off()
 
@@ -63,6 +63,7 @@ num_NA <- sum(is.na(activity$steps))
 
 #Replace missing NA values in activity_replace_na by average steps per interval
 activity_replace_NA <- activity
+index_NA <- which(is.na(activity$steps))
 for (idx in index_NA) {
     idx_interval <- activity[idx,"interval"]
     activity_replace_NA[idx, "steps"] <- steps_per_interval[steps_per_interval$Interval == idx_interval,"Steps"]
@@ -79,7 +80,7 @@ for (day in unique_dates_replace_NA) {
 steps_per_day_replace_NA <- data.frame("Steps" = sum_steps_replace_NA, "Date" = unique_dates_replace_NA)
 hist_replace_NA <- ggplot(steps_per_day_replace_NA, aes(Steps))
 hist_replace_NA <- hist_replace_NA + geom_histogram(color = "red", bins = 10) + labs(title ="Steps per day with replaced NA")
-png("./steps_per_day_histogram_replaced_NA.png")
+png("./plots/steps_per_day_histogram_replaced_NA.png")
 print(hist_replace_NA)
 dev.off()
 
@@ -92,4 +93,36 @@ tot_steps_per_day_replace_NA <- sum(steps_per_day_replace_NA$Steps)
 difference_mean_steps_per_day <- mean_steps_per_day_replace_NA - mean_steps_per_day
 difference_median_steps_per_day <- median_steps_per_day_replace_NA - median_steps_per_day
 difference_total_steps_per_day <- tot_steps_per_day_replace_NA - tot_steps_per_day
-#
+
+#create a factor variable in the activity dataframe based on weekday or weekend from the date column
+activity_which_day <- activity_replace_NA
+activity_which_day$day <- weekdays(as.Date(activity_which_day$date))
+activity_which_day$type_day <- ifelse(activity_which_day$day %in% c("Saturday","Sunday"), "weekend", "weekday")
+activity_which_day$type_day <- as.factor(activity_which_day$type_day)
+
+#plot time series of steps per interval by day of the week
+unique_intervals_activity <- sort(unique(activity_which_day$interval))
+average_step_arr <- rep(NA, 2*length(unique_intervals_activity))
+interval_arr <- rep(NA, 2*length(unique_intervals_activity))
+day_arr <- rep(NA, 2*length(unique_intervals_activity))
+num_itr <- 1
+days <- c("weekday","weekend")
+for (day in days) {
+    for (interval in unique_intervals_activity) {
+        average_step_arr[num_itr] <- mean(activity_which_day[activity_which_day$type_day == day & activity_which_day$interval == interval, "steps"], na.rm = TRUE)
+        interval_arr[num_itr] <- interval
+        day_arr[num_itr] <- day
+        num_itr <- num_itr + 1
+    }
+}
+interval_by_day <- data.frame("interval" = interval_arr, "day" = day_arr, "steps" = average_step_arr)
+ts_day <-ggplot(data = interval_by_day, aes(x = interval, y = steps)) + 
+    geom_line() +
+    facet_grid(day ~ .) +
+    ggtitle("Steps per 5 minute interval from weekday and weekend") +
+    xlab("Interval") +
+    ylab("Average steps") +
+    theme(plot.title = element_text(hjust = 0.5))
+png("./plots/steps_per_interval_by_day_time_series.png")
+print(ts_day)
+dev.off()
